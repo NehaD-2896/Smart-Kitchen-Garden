@@ -1,6 +1,7 @@
 /*
  * Smart Kitchen Garden Monitoring - SENSOR NODE 1 (Plant Pod 1)
  */
+const char* SERVER_URL = " https://nasty-peaches-cover.loca.lt";
 #define WOKWI_SIMULATION 1
 
 #include <Wire.h>
