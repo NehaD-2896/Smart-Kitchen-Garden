@@ -3,17 +3,31 @@ LoRa-Based Smart Kitchen Garden Monitoring & Automated Irrigation System
 -------------------------------------------------------------------------
 Flask backend + dashboard.
 
+<<<<<<< HEAD
 Adds (per "Next Review" notes):
   1. User login for the dashboard (session-based).
   3. Email alert simulation — every alert is logged as a full simulated
      email (From/To/Subject/Body) viewable in an in-dashboard Inbox,
      whether or not real SMTP is configured.
+=======
+Receives sensor readings (soil moisture, TDS, temperature) posted over
+WiFi/HTTP by each ESP32 node (or by the gateway that aggregates all
+LoRa nodes), stores them in SQLite, drives the live web dashboard,
+decides when to trigger irrigation, and sends email alerts on
+abnormal TDS.
+>>>>>>> origin/main
 
 Run:
     pip install -r requirements.txt
     python app.py
 
+<<<<<<< HEAD
 Default login: admin / admin123   (change via env vars, see below)
+=======
+The server listens on 0.0.0.0:5000 by default so a Wokwi-simulated
+ESP32 (via a public tunnel such as ngrok) or a real ESP32 on the same
+WiFi network can reach it.
+>>>>>>> origin/main
 """
 
 import os
@@ -22,12 +36,17 @@ import smtplib
 import ssl
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
+<<<<<<< HEAD
 from functools import wraps
 
 from flask import (
     Flask, jsonify, request, render_template, g,
     session, redirect, url_for, flash
 )
+=======
+
+from flask import Flask, jsonify, request, render_template, g
+>>>>>>> origin/main
 
 # --------------------------------------------------------------------------
 # Configuration
@@ -35,6 +54,7 @@ from flask import (
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "kitchen_garden.db")
 
+<<<<<<< HEAD
 DEFAULT_MOISTURE_MIN = 30.0
 DEFAULT_TDS_MAX = 700.0
 DEFAULT_TDS_MIN = 100.0
@@ -58,10 +78,34 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "change-this-secret-key-before-deployi
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
+=======
+# Default thresholds (can be changed live from the dashboard)
+DEFAULT_MOISTURE_MIN = 30.0   # % — below this -> irrigate
+DEFAULT_TDS_MAX = 700.0       # ppm — above this -> email alert
+DEFAULT_TDS_MIN = 100.0       # ppm — below this -> email alert (nutrient too low)
+
+NODE_IDS = ["node1", "node2", "node3", "node4"]
+
+# Email (SMTP) settings — set these as environment variables, do NOT hardcode
+# real credentials in this file.
+SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "465"))
+SMTP_USER = os.environ.get("SMTP_USER", "")          # sender email
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")  # app password
+ALERT_RECIPIENT = os.environ.get("ALERT_RECIPIENT", "")  # who gets the alert
+
+# Minimum gap between two alert emails for the same node (avoid spamming)
+ALERT_COOLDOWN_MINUTES = 10
+
+app = Flask(__name__)
+
+# In-memory cooldown tracker: {node_id: last_alert_datetime}
+>>>>>>> origin/main
 _last_alert_sent = {}
 
 
 # --------------------------------------------------------------------------
+<<<<<<< HEAD
 # Login helpers
 # --------------------------------------------------------------------------
 
@@ -97,6 +141,8 @@ def logout():
 
 
 # --------------------------------------------------------------------------
+=======
+>>>>>>> origin/main
 # Database helpers
 # --------------------------------------------------------------------------
 
@@ -144,6 +190,7 @@ def init_db():
             timestamp TEXT NOT NULL
         )
     """)
+<<<<<<< HEAD
     # --- Task 3: simulated email inbox ---
     c.execute("""
         CREATE TABLE IF NOT EXISTS simulated_emails (
@@ -157,6 +204,8 @@ def init_db():
             timestamp TEXT NOT NULL
         )
     """)
+=======
+>>>>>>> origin/main
     for node_id in NODE_IDS:
         c.execute("""
             INSERT OR IGNORE INTO thresholds (node_id, moisture_min, tds_min, tds_max)
@@ -167,6 +216,7 @@ def init_db():
 
 
 # --------------------------------------------------------------------------
+<<<<<<< HEAD
 # Email alert (real + simulated)
 # --------------------------------------------------------------------------
 
@@ -187,12 +237,27 @@ def send_email_alert(node_id, tds_value, reason):
     """Builds the alert email and ALWAYS logs it to the simulated inbox
     (Task 3), regardless of whether real SMTP is configured. If SMTP
     credentials are present, it additionally attempts a real send."""
+=======
+# Email alert
+# --------------------------------------------------------------------------
+
+def send_email_alert(node_id, tds_value, reason):
+    """Send an email notifying abnormal TDS. Silently skips if SMTP is
+    not configured, and respects a per-node cooldown to avoid spamming."""
+>>>>>>> origin/main
     now = datetime.now()
     last_sent = _last_alert_sent.get(node_id)
     if last_sent and (now - last_sent) < timedelta(minutes=ALERT_COOLDOWN_MINUTES):
         return False
 
+<<<<<<< HEAD
     sender = SMTP_USER if SMTP_USER else "kitchen-garden-system@simulated.local"
+=======
+    if not SMTP_USER or not SMTP_PASSWORD or not ALERT_RECIPIENT:
+        print(f"[ALERT-SKIPPED] Email not configured. {node_id}: {reason} (TDS={tds_value})")
+        return False
+
+>>>>>>> origin/main
     subject = f"[Kitchen Garden Alert] Abnormal TDS on {node_id}"
     body = (
         f"Node: {node_id}\n"
@@ -201,6 +266,7 @@ def send_email_alert(node_id, tds_value, reason):
         f"Time: {now.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
         f"Please check the nutrient balance in this plant pod."
     )
+<<<<<<< HEAD
 
     really_sent = False
     if SMTP_USER and SMTP_PASSWORD and ALERT_RECIPIENT:
@@ -222,6 +288,23 @@ def send_email_alert(node_id, tds_value, reason):
 
     _last_alert_sent[node_id] = now
     return True
+=======
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = SMTP_USER
+    msg["To"] = ALERT_RECIPIENT
+
+    try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=context) as server:
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_USER, [ALERT_RECIPIENT], msg.as_string())
+        _last_alert_sent[node_id] = now
+        return True
+    except Exception as exc:
+        print(f"[ALERT-ERROR] Failed to send email for {node_id}: {exc}")
+        return False
+>>>>>>> origin/main
 
 
 def log_alert(node_id, message):
@@ -236,11 +319,31 @@ def log_alert(node_id, message):
 
 # --------------------------------------------------------------------------
 # API: ingest sensor data from ESP32 node / gateway
+<<<<<<< HEAD
 # (left open, no login_required — hardware can't log in; see note below)
+=======
+>>>>>>> origin/main
 # --------------------------------------------------------------------------
 
 @app.route("/api/data", methods=["POST"])
 def ingest_data():
+<<<<<<< HEAD
+=======
+    """
+    Expected JSON body from an ESP32 node (or the LoRa gateway forwarding
+    a node's packet):
+    {
+        "node_id": "node1",
+        "soil_moisture": 42.5,
+        "tds": 550.0,
+        "temperature": 27.3
+    }
+
+    Returns JSON telling the node whether to switch its irrigation
+    relay ON or OFF:
+    { "irrigate": true/false }
+    """
+>>>>>>> origin/main
     data = request.get_json(force=True, silent=True)
     if not data:
         return jsonify({"error": "invalid or missing JSON body"}), 400
@@ -272,6 +375,10 @@ def ingest_data():
     )
     db.commit()
 
+<<<<<<< HEAD
+=======
+    # TDS out-of-range -> email alert
+>>>>>>> origin/main
     if tds > thresh["tds_max"]:
         reason = f"TDS above max threshold ({thresh['tds_max']} ppm)"
         if send_email_alert(node_id, tds, reason):
@@ -285,11 +392,18 @@ def ingest_data():
 
 
 # --------------------------------------------------------------------------
+<<<<<<< HEAD
 # API: thresholds (login required — dashboard only)
 # --------------------------------------------------------------------------
 
 @app.route("/api/thresholds", methods=["GET"])
 @login_required
+=======
+# API: thresholds (read / update from the dashboard)
+# --------------------------------------------------------------------------
+
+@app.route("/api/thresholds", methods=["GET"])
+>>>>>>> origin/main
 def get_thresholds():
     db = get_db()
     rows = db.execute("SELECT * FROM thresholds").fetchall()
@@ -297,7 +411,10 @@ def get_thresholds():
 
 
 @app.route("/api/thresholds/<node_id>", methods=["POST"])
+<<<<<<< HEAD
 @login_required
+=======
+>>>>>>> origin/main
 def update_thresholds(node_id):
     if node_id not in NODE_IDS:
         return jsonify({"error": "unknown node_id"}), 400
@@ -321,11 +438,18 @@ def update_thresholds(node_id):
 
 
 # --------------------------------------------------------------------------
+<<<<<<< HEAD
 # API: data for the dashboard UI (login required)
 # --------------------------------------------------------------------------
 
 @app.route("/api/latest")
 @login_required
+=======
+# API: data for the dashboard UI
+# --------------------------------------------------------------------------
+
+@app.route("/api/latest")
+>>>>>>> origin/main
 def latest_readings():
     db = get_db()
     result = {}
@@ -340,7 +464,10 @@ def latest_readings():
 
 
 @app.route("/api/history/<node_id>")
+<<<<<<< HEAD
 @login_required
+=======
+>>>>>>> origin/main
 def history(node_id):
     if node_id not in NODE_IDS:
         return jsonify({"error": "unknown node_id"}), 400
@@ -350,12 +477,19 @@ def history(node_id):
            ORDER BY id DESC LIMIT 50""",
         (node_id,),
     ).fetchall()
+<<<<<<< HEAD
     rows = list(reversed(rows))
+=======
+    rows = list(reversed(rows))  # chronological order for charts
+>>>>>>> origin/main
     return jsonify([dict(r) for r in rows])
 
 
 @app.route("/api/alerts")
+<<<<<<< HEAD
 @login_required
+=======
+>>>>>>> origin/main
 def alerts():
     db = get_db()
     rows = db.execute(
@@ -364,6 +498,7 @@ def alerts():
     return jsonify([dict(r) for r in rows])
 
 
+<<<<<<< HEAD
 # --- Task 3: simulated inbox API ---
 @app.route("/api/inbox")
 @login_required
@@ -392,6 +527,18 @@ def dashboard():
 def inbox_page():
     return render_template("inbox.html", username=session.get("username"))
 
+=======
+# --------------------------------------------------------------------------
+# Dashboard page
+# --------------------------------------------------------------------------
+
+@app.route("/")
+def dashboard():
+    return render_template("dashboard.html", node_ids=NODE_IDS)
+
+
+# --------------------------------------------------------------------------
+>>>>>>> origin/main
 
 if __name__ == "__main__":
     init_db()

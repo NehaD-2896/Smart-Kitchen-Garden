@@ -22,6 +22,7 @@
     padding: 24px;
     color: var(--text);
   }
+<<<<<<< HEAD
   .topbar {
     display: flex;
     justify-content: space-between;
@@ -29,6 +30,8 @@
     flex-wrap: wrap;
     margin-bottom: 4px;
   }
+=======
+>>>>>>> origin/main
   h1 {
     color: var(--green);
     margin-bottom: 4px;
@@ -38,6 +41,7 @@
     margin-top: 0;
     margin-bottom: 24px;
   }
+<<<<<<< HEAD
   .nav a {
     color: var(--green);
     text-decoration: none;
@@ -47,6 +51,8 @@
   }
   .nav a:hover { text-decoration: underline; }
   .nav span { color: #666; font-size: 0.9em; }
+=======
+>>>>>>> origin/main
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -136,6 +142,7 @@
 </head>
 <body>
 
+<<<<<<< HEAD
 <div class="topbar">
   <h1>🌱 Smart Kitchen Garden Dashboard</h1>
   <div class="nav">
@@ -144,6 +151,9 @@
     <a href="/logout">Logout</a>
   </div>
 </div>
+=======
+<h1>🌱 Smart Kitchen Garden Dashboard</h1>
+>>>>>>> origin/main
 <p class="subtitle">LoRa Wireless Sensor Network — Live status across 4 plant pods</p>
 
 <div class="grid" id="nodeGrid"></div>
@@ -217,7 +227,10 @@ NODE_IDS.forEach(nodeId => {
 
 async function refreshLatest() {
   const res = await fetch('/api/latest');
+<<<<<<< HEAD
   if (res.status === 401) { window.location.href = '/login'; return; }
+=======
+>>>>>>> origin/main
   const data = await res.json();
   for (const nodeId of NODE_IDS) {
     const reading = data[nodeId];
@@ -241,7 +254,10 @@ async function refreshLatest() {
 async function refreshHistory() {
   for (const nodeId of NODE_IDS) {
     const res = await fetch(`/api/history/${nodeId}`);
+<<<<<<< HEAD
     if (res.status === 401) { window.location.href = '/login'; return; }
+=======
+>>>>>>> origin/main
     const rows = await res.json();
     const chart = charts[nodeId];
     chart.data.labels = rows.map(r => r.timestamp.split('T')[1] || r.timestamp);
@@ -254,7 +270,10 @@ async function refreshHistory() {
 
 async function loadThresholds() {
   const res = await fetch('/api/thresholds');
+<<<<<<< HEAD
   if (res.status === 401) { window.location.href = '/login'; return; }
+=======
+>>>>>>> origin/main
   const rows = await res.json();
   rows.forEach(t => {
     document.getElementById(`mm-${t.node_id}`).value = t.moisture_min;
@@ -279,7 +298,10 @@ async function saveThresholds(nodeId) {
 
 async function refreshAlerts() {
   const res = await fetch('/api/alerts');
+<<<<<<< HEAD
   if (res.status === 401) { window.location.href = '/login'; return; }
+=======
+>>>>>>> origin/main
   const rows = await res.json();
   const list = document.getElementById('alertsList');
   if (rows.length === 0) {

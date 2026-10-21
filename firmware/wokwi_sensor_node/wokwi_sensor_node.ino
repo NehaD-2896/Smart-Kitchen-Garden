@@ -2,17 +2,36 @@
   LoRa-Based Smart Kitchen Garden — Sensor Node Firmware (Wokwi simulation)
   ---------------------------------------------------------------------------
   Simulates ONE plant-pod node: reads soil moisture, TDS, and temperature,
+<<<<<<< HEAD
   then sends them to the Flask dashboard over WiFi/HTTP. The server's
   response tells this node whether to switch its relay (water pump) ON
   or OFF.
 
   --- Wokwi wiring ---
+=======
+  then sends them to the Flask dashboard over WiFi/HTTP (per the review
+  decision to simulate the WSN with direct WiFi rather than a real LoRa
+  radio in Wokwi). The server's response tells this node whether to switch
+  its relay (water pump) ON or OFF.
+
+  In the real deployment this same sensor-read + relay logic runs on each
+  ESP32 node, but instead of calling the server directly it would send the
+  reading over LoRa (SX1278/SX1276) to the gateway, and the gateway would
+  forward it to the Flask server via WiFi.
+
+  --- Wokwi wiring (matches the proposal's circuit diagram) ---
+>>>>>>> origin/main
     Soil Moisture Sensor (analog) -> GPIO34
     TDS Sensor (analog)           -> GPIO35
     DHT22 (digital, 1-wire)       -> GPIO4
     Relay IN (drives water pump)  -> GPIO26
 
+<<<<<<< HEAD
   --- Libraries needed ---
+=======
+  --- Libraries needed (install via Arduino Library Manager, or they are
+      already bundled in the Wokwi project's libraries.txt) ---
+>>>>>>> origin/main
     - DHT sensor library (Adafruit)
     - ArduinoJson
 */
@@ -27,7 +46,13 @@ const char* NODE_ID = "node1";          // node1 / node2 / node3 / node4
 const char* WIFI_SSID = "Wokwi-GUEST";  // Wokwi's built-in simulated WiFi
 const char* WIFI_PASSWORD = "";         // Wokwi-GUEST has no password
 
+<<<<<<< HEAD
 // Replace with your Flask server's public URL (e.g. an ngrok tunnel).
+=======
+// Replace with your Flask server's public URL (e.g. an ngrok tunnel,
+// since the Wokwi simulator runs in the cloud and cannot reach
+// "localhost" on your machine).
+>>>>>>> origin/main
 const char* SERVER_URL = "https://YOUR-NGROK-OR-SERVER-URL/api/data";
 
 const unsigned long SEND_INTERVAL_MS = 5000;  // send every 5 seconds
@@ -53,9 +78,17 @@ void connectWiFi() {
   Serial.println("\nWiFi connected. IP: " + WiFi.localIP().toString());
 }
 
+<<<<<<< HEAD
 float readSoilMoisturePercent() {
   const int DRY_VALUE = 3000;
   const int WET_VALUE = 1200;
+=======
+// Convert raw ADC (0-4095) soil moisture reading into a 0-100% value.
+// Calibrate DRY_VALUE / WET_VALUE against your actual sensor in air vs water.
+float readSoilMoisturePercent() {
+  const int DRY_VALUE = 3000;  // ADC reading in dry air
+  const int WET_VALUE = 1200;  // ADC reading fully submerged in water
+>>>>>>> origin/main
   int raw = analogRead(SOIL_PIN);
   float percent = 100.0 * (DRY_VALUE - raw) / (DRY_VALUE - WET_VALUE);
   if (percent < 0) percent = 0;
@@ -63,10 +96,20 @@ float readSoilMoisturePercent() {
   return percent;
 }
 
+<<<<<<< HEAD
 float readTDSppm() {
   int raw = analogRead(TDS_PIN);
   float voltage = raw * (3.3 / 4095.0);
   float ppm = (voltage / 3.3) * 1000.0;
+=======
+// Convert raw ADC TDS reading into an approximate ppm value.
+// Basic linear approximation for simulation purposes; replace with the
+// Gravity TDS sensor's official compensation formula for real hardware.
+float readTDSppm() {
+  int raw = analogRead(TDS_PIN);
+  float voltage = raw * (3.3 / 4095.0);
+  float ppm = (voltage / 3.3) * 1000.0;  // simple 0-1000ppm scaling
+>>>>>>> origin/main
   return ppm;
 }
 

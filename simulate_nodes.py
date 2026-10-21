@@ -5,9 +5,12 @@ Flask server, without needing Wokwi or real ESP32 hardware running yet.
 Usage:
     python simulate_nodes.py
     (make sure app.py is already running in another terminal)
+<<<<<<< HEAD
 
 Note: /api/data is NOT behind login (hardware can't log in), so this
 script doesn't need credentials.
+=======
+>>>>>>> origin/main
 """
 
 import random
