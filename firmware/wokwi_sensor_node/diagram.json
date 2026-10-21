@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "author": "Kitchen Garden LoRa Project",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "soil_sim", "top": -40, "left": 150, "attrs": { "label": "Soil Moisture (sim)" } },
+    { "type": "wokwi-potentiometer", "id": "tds_sim", "top": 60, "left": 150, "attrs": { "label": "TDS (sim)" } },
+    { "type": "wokwi-dht22", "id": "dht", "top": 20, "left": 250, "attrs": {} },
+    { "type": "wokwi-relay-module", "id": "relay", "top": -100, "left": 250, "attrs": {} },
+    { "type": "wokwi-led", "id": "pump_led", "top": -150, "left": 320, "attrs": { "color": "blue", "label": "Pump" } }
+  ],
+  "connections": [
+    [ "esp:34", "soil_sim:SIG", "green", [] ],
+    [ "soil_sim:VCC", "esp:3V3", "red", [] ],
+    [ "soil_sim:GND", "esp:GND.1", "black", [] ],
+
+    [ "esp:35", "tds_sim:SIG", "green", [] ],
+    [ "tds_sim:VCC", "esp:3V3", "red", [] ],
+    [ "tds_sim:GND", "esp:GND.2", "black", [] ],
+
+    [ "esp:D4", "dht:SDA", "green", [] ],
+    [ "dht:VCC", "esp:3V3", "red", [] ],
+    [ "dht:GND", "esp:GND.3", "black", [] ],
+
+    [ "esp:D26", "relay:IN", "green", [] ],
+    [ "relay:VCC", "esp:5V", "red", [] ],
+    [ "relay:GND", "esp:GND.4", "black", [] ],
+
+    [ "relay:NO", "pump_led:A", "blue", [] ],
+    [ "pump_led:C", "esp:GND.5", "black", [] ]
+  ]
+}

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Simulated Inbox — Kitchen Garden Dashboard</title>
+<style>
+  :root { --green: #2e7d32; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f4f6f5;
+    margin: 0;
+    padding: 24px;
+    color: #1c1c1c;
+  }
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  h1 { color: var(--green); margin: 0; font-size: 1.4em; }
+  .nav a {
+    color: var(--green);
+    text-decoration: none;
+    margin-left: 16px;
+    font-size: 0.9em;
+    font-weight: 600;
+  }
+  .nav a:hover { text-decoration: underline; }
+  .email {
+    background: white;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .email-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    color: #555;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .subject { font-weight: 700; color: #1c1c1c; margin: 0 0 6px 0; }
+  .body-text {
+    white-space: pre-wrap;
+    font-size: 0.9em;
+    color: #333;
+    background: #fafafa;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75em;
+    font-weight: 600;
+  }
+  .tag-simulated { background: #fff3e0; color: #e65100; }
+  .tag-sent { background: #e8f5e9; color: var(--green); }
+  .no-data { color: #999; font-style: italic; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📧 Simulated Email Inbox</h1>
+  <div class="nav">
+    <span>Logged in as {{ username }}</span>
+    <a href="/">Dashboard</a>
+    <a href="/logout">Logout</a>
+  </div>
+</div>
+
+<p style="color:#666; font-size:0.9em;">
+  Every TDS alert is logged here exactly as the email would read, whether or
+  not real SMTP is configured — useful for demonstrating the alert flow
+  without needing live email credentials.
+</p>
+
+<div id="emailList"><p class="no-data">Loading...</p></div>
+
+<script>
+async function loadInbox() {
+  const res = await fetch('/api/inbox');
+  const rows = await res.json();
+  const container = document.getElementById('emailList');
+  if (rows.length === 0) {
+    container.innerHTML = '<p class="no-data">No alert emails yet.</p>';
+    return;
+  }
+  container.innerHTML = rows.map(e => `
+    <div class="email">
+      <div class="email-header">
+        <span>From: <strong>${e.sender}</strong> &nbsp;→&nbsp; To: <strong>${e.recipient}</strong></span>
+        <span>
+          <span class="tag ${e.really_sent ? 'tag-sent' : 'tag-simulated'}">
+            ${e.really_sent ? 'REAL EMAIL SENT' : 'SIMULATED ONLY'}
+          </span>
+          &nbsp; ${e.timestamp}
+        </span>
+      </div>
+      <p class="subject">${e.subject}</p>
+      <div class="body-text">${e.body}</div>
+    </div>
+  `).join('');
+}
+loadInbox();
+setInterval(loadInbox, 5000);
+</script>
+
+</body>
+</html>
